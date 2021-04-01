@@ -1,12 +1,24 @@
 const express = require('express')
 const multer = require('multer')
+const sha1 = require('sha1')
+const cors = require('cors')
+
+const { fetch } = require('./resources/db/db')
+
+
+const app = express()
+
+const PORT = process.env.PORT || 4003
+
+app.use(express.json())
+app.use(cors())
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/books')
+    cb(null, 'books')
   },
   filename: function (req, file, cb) {
-    const fileName = file.fieldname + '-' + Date.now()
+    const fileName = Date.now() + '-' + file.originalname
 
     cb(null, fileName)
   }
@@ -14,13 +26,54 @@ const storage = multer.diskStorage({
  
 const upload = multer({ storage: storage })
 
-const app = express()
+app.get('/', (req, res) => {
+	res.send({
+		status: 200
+	})
+})
 
-const PORT = process.env.PORT || 3000
+app.post('/upload', upload.single('book'), async (req, res, next) => {
+	
+	try {
 
-app.use(express.json())
+		const addBookRes = await fetch(`
+			insert into 
+				books (book_unique_id, book_path, book_size)
+			values
+				($1, $2, $3)
+			returning
+				book_unique_id,
+				book_uploaded_at
+		`, sha1(req?.file?.filename), req?.file?.path, (req?.file?.size / 1024 / 1024).toFixed(2))
 
-app.post('/upload', upload.array('books', 12), (req, res, next) => {
+		res.json({
+			status: 200,
+			message: 'book uploaded',
+			data: addBookRes
+		})
+
+	} catch(e) {
+		console.log(e)
+
+		res.json({
+			status: 500,
+			message: e.message
+		})
+	}
+
+})
+
+app.post('/uploads', upload.array('books', 12), async (req, res, next) => {
+	console.log(req.files)
+})
+
+app.get('/download', async (req, res) => {
+
+	try {
+		
+	} catch(e) {
+		console.log(e)
+	}
 
 })
 
