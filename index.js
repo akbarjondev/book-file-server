@@ -1,3 +1,4 @@
+const path = require('path')
 const express = require('express')
 const multer = require('multer')
 const sha1 = require('sha1')
@@ -67,9 +68,15 @@ app.post('/uploads', upload.array('books', 12), async (req, res, next) => {
 	console.log(req.files)
 })
 
-app.get('/download', async (req, res) => {
+app.get('/download/:book_id', async (req, res) => {
+
+	const { book_id } = req.params
 
 	try {
+
+		const [ book ] = await fetch(`select * from books where book_unique_id = $1`, book_id)
+
+		res.sendFile(path.join(__dirname + '/' + book.book_path))
 		
 	} catch(e) {
 		console.log(e)
