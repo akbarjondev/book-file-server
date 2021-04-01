@@ -10,6 +10,8 @@ const pool = new Pool({
 })
 
 const fetch = async (SQL, ...params) => {
+	console.log('db connect...')
+	
 	const client = await pool.connect()
 
 	try {
@@ -22,6 +24,7 @@ const fetch = async (SQL, ...params) => {
 		console.log(e)
 	} finally {
 		client.release()
+		console.log('db disconnect')
 	}
 
 }
